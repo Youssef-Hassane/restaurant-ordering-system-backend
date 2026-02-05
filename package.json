@@ -2,7 +2,11 @@
   "name": "restaurant-backend",
   "version": "1.0.0",
   "description": "Restaurant ordering API with Express, TypeScript and Supabase",
+  "type": "module",
   "main": "dist/server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
