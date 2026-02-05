@@ -13,8 +13,8 @@ const PORT: number = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
@@ -44,18 +44,21 @@ app.use((req: Request, res: Response) => {
 // Error handler
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log('');
-  console.log('🍽️  Restaurant Backend API');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📍 Health:     http://localhost:${PORT}/api/health`);
-  console.log(`📍 Auth:       http://localhost:${PORT}/api/auth`);
-  console.log(`📍 Products:   http://localhost:${PORT}/api/products`);
-  console.log(`📍 Orders:     http://localhost:${PORT}/api/orders`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('');
-});
+// Only start the server if not in Vercel (serverless)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log('');
+    console.log('🍽️  Restaurant Backend API');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📍 Health:     http://localhost:${PORT}/api/health`);
+    console.log(`📍 Auth:       http://localhost:${PORT}/api/auth`);
+    console.log(`📍 Products:   http://localhost:${PORT}/api/products`);
+    console.log(`📍 Orders:     http://localhost:${PORT}/api/orders`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('');
+  });
+}
 
+// Export for Vercel serverless
 export default app;
