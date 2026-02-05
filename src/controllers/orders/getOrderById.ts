@@ -6,18 +6,19 @@ import { OrderWithItems, ApiResponse } from '../../types/index.js';
 export const getOrderById = asyncHandler(
   async (req: Request, res: Response<ApiResponse<OrderWithItems>>, next: NextFunction): Promise<void> => {
     const { id } = req.params;
+    const orderId = Array.isArray(id) ? id[0] : id;
 
     // Check if id is a number (order_number) or UUID
-    const isOrderNumber = /^\d+$/.test(id);
+    const isOrderNumber = /^\d+$/.test(orderId);
 
     let orderQuery = supabase
       .from('orders')
       .select('*, creator:users!orders_created_by_fkey(id, name, email, role)');
 
     if (isOrderNumber) {
-      orderQuery = orderQuery.eq('order_number', parseInt(id));
+      orderQuery = orderQuery.eq('order_number', parseInt(orderId));
     } else {
-      orderQuery = orderQuery.eq('id', id);
+      orderQuery = orderQuery.eq('id', orderId);
     }
 
     const { data: order, error: orderError } = await orderQuery.single();

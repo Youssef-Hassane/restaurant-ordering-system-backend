@@ -7,11 +7,13 @@ import { recalculateOrderTotal } from '../../utils/helpers/orderHelpers.js';
 export const removeOrderItem = asyncHandler(
   async (req: Request, res: Response<ApiResponse<OrderWithItems>>, next: NextFunction): Promise<void> => {
     const { id, itemId } = req.params;
+    const orderId = Array.isArray(id) ? id[0] : id;
+    const orderItemId = Array.isArray(itemId) ? itemId[0] : itemId;
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('id, status')
-      .eq('id', id)
+      .eq('id', orderId)
       .single();
 
     if (orderError || !order) {
@@ -25,8 +27,8 @@ export const removeOrderItem = asyncHandler(
     const { data: item, error: itemError } = await supabase
       .from('order_items')
       .select('id, product_name')
-      .eq('id', itemId)
-      .eq('order_id', id)
+      .eq('id', orderItemId)
+      .eq('order_id', orderId)
       .single();
 
     if (itemError || !item) {
@@ -36,7 +38,7 @@ export const removeOrderItem = asyncHandler(
     const { data: allItems } = await supabase
       .from('order_items')
       .select('id')
-      .eq('order_id', id);
+      .eq('order_id', orderId);
 
     if (allItems && allItems.length === 1) {
       throw new AppError('Cannot remove the last item. Delete the order instead.', 400);
@@ -45,24 +47,24 @@ export const removeOrderItem = asyncHandler(
     const { error: deleteError } = await supabase
       .from('order_items')
       .delete()
-      .eq('id', itemId);
+      .eq('id', orderItemId);
 
     if (deleteError) {
       throw new AppError(deleteError.message, 400);
     }
 
-    await recalculateOrderTotal(id);
+    await recalculateOrderTotal(orderId);
 
     const { data: updatedOrder } = await supabase
       .from('orders')
       .select('*')
-      .eq('id', id)
+      .eq('id', orderId)
       .single();
 
     const { data: items } = await supabase
       .from('order_items')
       .select('*')
-      .eq('order_id', id);
+      .eq('order_id', orderId);
 
     res.json({
       success: true,

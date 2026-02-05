@@ -7,6 +7,7 @@ import { recalculateOrderTotal } from '../../utils/helpers/orderHelpers.js';
 export const addOrderItem = asyncHandler(
   async (req: Request, res: Response<ApiResponse<OrderWithItems>>, next: NextFunction): Promise<void> => {
     const { id } = req.params;
+    const orderId = Array.isArray(id) ? id[0] : id;
     const { product_id, quantity } = req.body as AddOrderItemRequest;
 
     if (!product_id || typeof product_id !== 'string') {
@@ -20,7 +21,7 @@ export const addOrderItem = asyncHandler(
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('id, status, currency')
-      .eq('id', id)
+      .eq('id', orderId)
       .single();
 
     if (orderError || !order) {
@@ -55,7 +56,7 @@ export const addOrderItem = asyncHandler(
     const { data: existingItem } = await supabase
       .from('order_items')
       .select('id, quantity')
-      .eq('order_id', id)
+      .eq('order_id', orderId)
       .eq('product_id', product_id)
       .single();
 
@@ -76,7 +77,7 @@ export const addOrderItem = asyncHandler(
       const { error: insertError } = await supabase
         .from('order_items')
         .insert({
-          order_id: id,
+          order_id: orderId,
           product_id: product.id,
           product_name: product.name,
           quantity,
@@ -90,18 +91,18 @@ export const addOrderItem = asyncHandler(
       }
     }
 
-    await recalculateOrderTotal(id);
+    await recalculateOrderTotal(orderId);
 
     const { data: updatedOrder } = await supabase
       .from('orders')
       .select('*')
-      .eq('id', id)
+      .eq('id', orderId)
       .single();
 
     const { data: items } = await supabase
       .from('order_items')
       .select('*')
-      .eq('order_id', id);
+      .eq('order_id', orderId);
 
     res.json({
       success: true,

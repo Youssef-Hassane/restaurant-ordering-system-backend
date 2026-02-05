@@ -26,7 +26,7 @@ export const generateAccessToken = (user: User): string => {
     role: user.role
   };
 
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] });
 };
 
 // Generate refresh token
@@ -37,7 +37,7 @@ export const generateRefreshToken = (user: User): string => {
     role: user.role
   };
 
-  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN as jwt.SignOptions['expiresIn'] });
 };
 
 // Verify refresh token
@@ -47,8 +47,27 @@ export const verifyRefreshToken = (token: string): TokenPayload => {
 
 // Get token expiry date
 export const getRefreshTokenExpiry = (): Date => {
-  const days = parseInt(JWT_REFRESH_EXPIRES_IN) || 7;
+  const match = JWT_REFRESH_EXPIRES_IN.match(/^(\d+)([dhms]?)$/);
+  const value = match ? parseInt(match[1]) : 7;
+  const unit = match ? match[2] : 'd';
+  
   const expiry = new Date();
-  expiry.setDate(expiry.getDate() + days);
+  
+  switch (unit) {
+    case 'h':
+      expiry.setHours(expiry.getHours() + value);
+      break;
+    case 'm':
+      expiry.setMinutes(expiry.getMinutes() + value);
+      break;
+    case 's':
+      expiry.setSeconds(expiry.getSeconds() + value);
+      break;
+    case 'd':
+    default:
+      expiry.setDate(expiry.getDate() + value);
+      break;
+  }
+  
   return expiry;
 };
